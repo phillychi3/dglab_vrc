@@ -20,7 +20,7 @@ class DglabVrc:
     def __init__(self):
         self.osc = OSC()
         self.dglab = dglabv3()
-        self.dglab_control = Dglab_control()
+        self.dglab_control = Dglab_control(self.dglab)
         self.main_loop = None
 
     async def run(self):
@@ -41,6 +41,7 @@ class DglabVrc:
         log.info(config)
         self.register_handlers()
         asyncio.create_task(self.send_wave_task())
+        self.dglab_control.start_reset_loop()
         while True:
             await asyncio.sleep(1)
 
@@ -71,7 +72,7 @@ class DglabVrc:
             log.info(f"Received OSC message for path: {path} with args: {args}")
             if self.main_loop and self.main_loop.is_running():
                 asyncio.run_coroutine_threadsafe(
-                    self.dglab_control.on_vrc_pb(path, self.dglab, *args),
+                    self.dglab_control.on_vrc_pb(path, *args),
                     self.main_loop,
                 )
             else:

@@ -1,22 +1,50 @@
 from dglabv3 import dglabv3, Channel
 import logging
 import time
+import asyncio
 
 log = logging.getLogger(__name__)
 
-MAX_STRENGTH = 10
+MAX_STRENGTH = 30
 
 
 class Dglab_control:
-    def __init__(self):
+    def __init__(self, dgclass: dglabv3):
         self.enable = True
         self.last_send_time = {Channel.A: 0, Channel.B: 0}
         self.send_delay = 0.5
+        self.dgclass = dgclass
+        self.reset_loop_enabled = False
+        self.reset_interval = 5.0
+        self.reset_task = None
+
+    async def reset_to_zero(self):
+        if not self.dgclass.is_linked_to_app():
+            return
+        if self.last_send_time[Channel.A] - time.time() > self.send_delay:
+            await self.dgclass.set_strength_value(channel=Channel.A, strength=0)
+        if self.last_send_time[Channel.B] - time.time() > self.send_delay:
+            await self.dgclass.set_strength_value(channel=Channel.B, strength=0)
+
+    async def continuous_reset_loop(self):
+        while self.reset_loop_enabled:
+            await self.reset_to_zero()
+            await asyncio.sleep(self.reset_interval)
+
+    def start_reset_loop(self):
+        if not self.reset_loop_enabled:
+            self.reset_loop_enabled = True
+            self.reset_task = asyncio.create_task(self.continuous_reset_loop())
+
+    def stop_reset_loop(self):
+        if self.reset_loop_enabled:
+            self.reset_loop_enabled = False
+            if self.reset_task and not self.reset_task.done():
+                self.reset_task.cancel()
 
     async def on_vrc_pb(
         self,
         path: str,
-        dgclass: dglabv3,
         value,
     ):
         if not self.enable:
@@ -45,7 +73,9 @@ class Dglab_control:
             log.info(
                 f"About to call set_strength_value with channel={channel.name}, value={target_strength}"
             )
-            await dgclass.set_strength_value(channel=channel, strength=target_strength)
+            await self.dgclass.set_strength_value(
+                channel=channel, strength=target_strength
+            )
             log.info(
                 f"Successfully called set_strength_value for channel {channel.name}"
             )

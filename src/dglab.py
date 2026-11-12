@@ -1,4 +1,4 @@
-from dglabv3 import dglabv3, Channel
+from dglabv3 import dglabv3, Channel, Coyote
 import logging
 import time
 import asyncio
@@ -18,13 +18,18 @@ class Dglab_control:
         self.reset_interval = 5.0
         self.reset_task = None
 
+    async def _set_strength_value(self, channel, strength):
+        device = self.dgclass.get_device(Coyote)
+        if device is not None and device.has_device:
+            await device.set_strength(channel, strength)
+
     async def reset_to_zero(self):
         if not self.dgclass.is_linked_to_app():
             return
         if self.last_send_time[Channel.A] - time.time() > self.send_delay:
-            await self.dgclass.set_strength_value(channel=Channel.A, strength=0)
+            await self._set_strength_value(channel=Channel.A, strength=0)
         if self.last_send_time[Channel.B] - time.time() > self.send_delay:
-            await self.dgclass.set_strength_value(channel=Channel.B, strength=0)
+            await self._set_strength_value(channel=Channel.B, strength=0)
 
     async def continuous_reset_loop(self):
         while self.reset_loop_enabled:
@@ -50,7 +55,7 @@ class Dglab_control:
         if not self.enable:
             return
 
-        log.info(f"Sending command for path: {path} with value: {value}")
+        log.debug("Sending command for path: %s with value: %s", path, value)
 
         if path == "A":
             channel = Channel.A
@@ -67,17 +72,11 @@ class Dglab_control:
         self.last_send_time[channel] = current_time
 
         target_strength = int(MAX_STRENGTH * float(value))
-        log.info(f"Setting strength for channel {channel.name} to {target_strength}")
+        log.debug("Setting strength for channel %s to %s", channel.name, target_strength)
 
         try:
-            log.info(
-                f"About to call set_strength_value with channel={channel.name}, value={target_strength}"
-            )
-            await self.dgclass.set_strength_value(
+            await self._set_strength_value(
                 channel=channel, strength=target_strength
-            )
-            log.info(
-                f"Successfully called set_strength_value for channel {channel.name}"
             )
         except Exception as e:
             log.error(f"Error calling set_strength_value: {e}")

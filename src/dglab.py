@@ -72,12 +72,12 @@ class Dglab_control:
         self.last_send_time[channel] = current_time
 
         target_strength = int(MAX_STRENGTH * float(value))
-        log.debug("Setting strength for channel %s to %s", channel.name, target_strength)
+        log.debug(
+            "Setting strength for channel %s to %s", channel.name, target_strength
+        )
 
         try:
-            await self._set_strength_value(
-                channel=channel, strength=target_strength
-            )
+            await self._set_strength_value(channel=channel, strength=target_strength)
         except Exception as e:
             log.error(f"Error calling set_strength_value: {e}")
             import traceback

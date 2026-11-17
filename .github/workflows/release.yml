@@ -1,0 +1,44 @@
+name: Build Windows release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies
+        run: poetry install --no-root --with dev
+
+      - name: Run tests
+        run: poetry run python -m unittest discover -s tests
+
+      - name: Build exe
+        run: poetry run pyinstaller --noconfirm --clean --onefile --windowed --name dglab-vrc --paths src src/gui.py
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $name = "dglab-vrc-${{ github.event.release.tag_name }}-windows"
+          New-Item -ItemType Directory -Force $name | Out-Null
+          Copy-Item dist/dglab-vrc.exe, config.yaml, README.md, LICENSE $name
+          Compress-Archive -Path "$name/*" -DestinationPath "$name.zip"
+          "ASSET=$name.zip" >> $env:GITHUB_ENV
+
+      - name: Upload release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" "${{ env.ASSET }}" --clobber

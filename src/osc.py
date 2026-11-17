@@ -7,6 +7,7 @@ from pythonosc import udp_client, dispatcher, osc_server
 
 log = logging.getLogger(__name__)
 
+
 class OSC:
     def __init__(self, listen_port=9001):
         self.received = 0
@@ -25,9 +26,7 @@ class OSC:
             ("127.0.0.1", listen_port),
             self.dispatchers,
         )
-        self.client = udp_client.SimpleUDPClient(
-            "127.0.0.1", 9000
-        )
+        self.client = udp_client.SimpleUDPClient("127.0.0.1", 9000)
         self.loop = asyncio.new_event_loop()
         self.server_thread = None
         self.worker_thread.start()
@@ -48,9 +47,17 @@ class OSC:
 
     def report_status(self):
         if log.isEnabledFor(logging.DEBUG):
-            age = None if self.last_received is None else round(time.monotonic() - self.last_received, 1)
-            log.debug("OSC status: received=%s OGB=%s last_packet_seconds_ago=%s",
-                     self.received, self.ogb_received, age)
+            age = (
+                None
+                if self.last_received is None
+                else round(time.monotonic() - self.last_received, 1)
+            )
+            log.debug(
+                "OSC status: received=%s OGB=%s last_packet_seconds_ago=%s",
+                self.received,
+                self.ogb_received,
+                age,
+            )
 
     def start_server(self):
         """啟動 OSC 服務器來接收來自 VRChat 的訊息"""

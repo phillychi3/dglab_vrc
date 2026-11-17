@@ -1,10 +1,14 @@
 # dglab-vrc
 
 
+## 從原始碼執行
+
 ```powershell
 poetry install --no-root
-poetry run python src/main.py
+poetry run python src/gui.py      # 圖形介面
+poetry run python src/main.py     # 命令列（--osc-only、--debug）
 ```
+
 
 
 ## 設定
@@ -12,8 +16,16 @@ poetry run python src/main.py
 ```yaml
 A:
   - DGLAB/right_leg
+  - DGLAB/right_leg_1
+  - DGLAB/right_arm
+  - DGLAB/right_arm_1
+  - DGLAB/chest
 B:
   - DGLAB/left_leg
+  - DGLAB/left_leg_1
+  - DGLAB/left_arm
+  - DGLAB/left_arm_1
+  - DGLAB/abdomen
 
 sps:
   enabled: true
@@ -23,7 +35,6 @@ sps:
   max_amplitude: 100
 ```
 
-頂層 `A`、`B` 為郊狼強度控制的 Avatar 參數名稱，不會控制 Ovc。
 
 | SPS 設定          | 用途                                                                     |
 | ----------------- | ------------------------------------------------------------------------ |

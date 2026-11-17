@@ -1,14 +1,16 @@
-
 A:
-  - DGLAB/right_leg
+- DGLAB/right_arm
+- DGLAB/right_arm_1
+- DGLAB/left_arm
+- DGLAB/left_arm_1
 B:
-  - DGLAB/left_leg
-
+- DGLAB/right_leg
+- DGLAB/right_leg_1
+- DGLAB/left_leg
+- DGLAB/left_leg_1
 sps:
   enabled: true
-  # A is shallow, B is deep. Set B to reverse the layout.
   shallow_channel: A
-  # plug: your Plug; socket: your Socket; auto: accept both.
   vrcfury_source: plug
   include_self: false
   max_amplitude: 100

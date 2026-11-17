@@ -58,6 +58,9 @@ class SpsOvcControl:
         self.contacts = {}
         self.lengths = {}
         self.active = {}
+        # Latest computed values, read by the GUI.
+        self.last_depth = 0.0
+        self.last_levels = {Channel.A: 0.0, Channel.B: 0.0}
 
     def update_depth(self, address, *args):
         """Called on the main asyncio loop; coalesce OSC bursts into one sample."""
@@ -143,6 +146,8 @@ class SpsOvcControl:
         now = time.monotonic()
         vrcfury_depth = self._vrcfury_depth(now)
         depths = depth_position(vrcfury_depth, self.shallow_channel, ACTIVATION_DEPTH)
+        self.last_depth = vrcfury_depth
+        self.last_levels = depths
 
         if log.isEnabledFor(logging.DEBUG) and now - self._last_report >= 5:
             log.debug(
